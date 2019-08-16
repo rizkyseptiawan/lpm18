@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import com.jfoenix.controls.*?>
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="pathFolder" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="657.0" styleClass="mainFxmlClass" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="laos.InstallerController">
+    <stylesheets>
+        <URL value="@installer.css" />
+    </stylesheets>
+   <children>
+      <JFXButton fx:id="btnPilihFile" buttonType="RAISED" layoutX="497.0" layoutY="103.0" onAction="#btnSelectFileActionPerformed" prefHeight="25.0" prefWidth="83.0" style="-fx-background-color: #29B6F6;" text="Pilih FIle" textFill="WHITE" />
+      <JFXTextField fx:id="inputFile" editable="false" focusColor="#29b6f6" layoutX="89.0" layoutY="103.0" prefHeight="25.0" prefWidth="403.0" unFocusColor="#bfbfbf" />
+      <JFXButton fx:id="pilihFolder" buttonType="RAISED" disable="true" layoutX="497.0" layoutY="182.0" onAction="#btnSelectFolderActionPerformed" style="-fx-background-color: #FFCA28;" text="Pilih Folder" textFill="WHITE">
+         <font>
+            <Font name="Lato Medium" size="13.0" />
+         </font>
+      </JFXButton>
+      <JFXTextField fx:id="pathEkstrak" editable="false" focusColor="#29b6f6" layoutX="89.0" layoutY="182.0" prefHeight="25.0" prefWidth="403.0" unFocusColor="#bfbfbf" />
+      <JFXTextField fx:id="password" layoutX="89.0" layoutY="247.0" prefHeight="25.0" prefWidth="203.0" />
+      <JFXButton fx:id="lanjut" layoutX="580.0" layoutY="361.0" onAction="#aksiLanjut" text="Lanjut" />
+      <JFXButton fx:id="btnBatal" layoutX="513.0" layoutY="361.0" onAction="#btnBatalAksi" text="Batal" />
+      <Label layoutX="222.0" layoutY="31.0" text="Alldeb Installer">
+         <font>
+            <Font name="Lato Black" size="23.0" />
+         </font>
+      </Label>
+      <Label layoutX="89.0" layoutY="88.0" text="Masukka File Installer (.alldeb)">
+         <font>
+            <Font name="Lato Medium Italic" size="13.0" />
+         </font>
+      </Label>
+      <Label layoutX="89.0" layoutY="166.0" text="Folder Hasil Instalasi">
+         <font>
+            <Font name="Lato Medium Italic" size="13.0" />
+         </font>
+      </Label>
+      <Label layoutX="89.0" layoutY="231.0" text="Masukkan Password">
+         <font>
+            <Font name="Lato Medium Italic" size="13.0" />
+         </font>
+      </Label>
+      <Label fx:id="labelError" layoutX="89.0" layoutY="346.0" textFill="#ff0808" />
+      <JFXCheckBox fx:id="ekstrak" layoutX="89.0" layoutY="140.0" onAction="#aksiEkstrak" text="Ekstrak File" textFill="#085cc9" />
+   </children>
+</AnchorPane>

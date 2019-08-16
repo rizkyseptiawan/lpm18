@@ -1,0 +1,371 @@
+#!/bin/bash
+
+#    Copyright (C) 2013-2018 Nif Kurniawan <me@nif-kurniawan.web.id>
+
+#    This file is part of Alldeb Manager.
+
+#    Alldeb Manager is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU Affero General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU Affero General Public License for more details.
+
+#    You should have received a copy of the GNU Affero General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#    ---------------------------------------------------------------    #
+
+#    versi 1.3
+#    last update : 02 Mei 2018
+#    jika saya membuat update insya Allah akan tersedia di www.alldeb.net
+
+#    ---------------------------------------------------------------    #
+
+
+echo -e "\n== alldeb-manager-cli 1.3 =="
+#echo "installer file alldeb, backend untuk Alldeb Manager"
+
+
+##################
+# --konfigurasi--
+##################
+
+apt_archives="/var/cache/apt/archives"
+ekstrakdir="$apt_archives"
+
+##################
+# --functions--
+##################
+
+function keluar {
+  if [ $mode -eq 1 ]; then
+    #pause fltk
+    if [ $1 -eq 0 ]; then
+      echo -e "\n\n\033[32m[... Tekan sembarang tombol untuk mengakhiri ...]\e[00m\n"
+    else
+      echo -e "\n\n\033[33m[... Tekan sembarang tombol untuk mengakhiri ...]\e[00m\n"
+    fi
+    read -rs -n1
+  fi
+  exit $1
+}
+
+function ekstrak {
+  ekstrak_asal="$1"
+  ekstrak_tujuan="$2"
+  echo -e "Menyalin semua file .deb ke directory ekstrak\nDirectory ekstrak : $ekstrak_tujuan"
+  mkdir -p "$ekstrak_tujuan/"
+  if [ -w "$ekstrak_tujuan/" ]; then
+    cp -u "$ekstrak_asal"/*\.deb "$ekstrak_tujuan/"
+  else
+    $assudo mkdir -p "$ekstrak_tujuan/"
+    $assudo cp -u "$ekstrak_asal"/*\.deb "$ekstrak_tujuan/"
+  fi
+  ekstrak_status=$?
+  if [ $ekstrak_status -eq 0 ]; then
+    echo -e "Selesai.\n"
+  fi
+  return $ekstrak_status
+}
+
+function ins {
+  ins_awaldir="$1"
+  ins_ruangkerja="$2"
+  ins_status=1
+  if [ -z "$apt_archives" ]; then
+    apt_archives="/var/cache/apt/archives"
+  fi
+  cd "$ins_ruangkerja"
+  echo -e "Menjalankan pengecekan & install ..."
+  echo -e "Mengecek kondisi APT Anda..."
+  $assudo apt-get check
+  if [ $? -eq 0 ]; then
+    echo -e "OK\n"
+  else
+    echo -e "[!] Maaf, sistem APT Anda sedang bermasalah. Pemrosesan file alldeb ditunda.\nSilahkan perbaiki sistem APT Anda terlebih dahulu.\n"
+    cd "$ins_awaldir"
+    return $ins_status
+    # gak langsung exit program. karena bisa jadi ingin ekstrak juga
+    # (ekstrak tetap bisa dijalankan meskipun apt sedang error)
+  fi
+  if [ `which apt-ftparchive | wc -l` -gt 0 ]; then
+    scanner="apt-ftparchive"
+    apt-ftparchive packages . 2>/dev/null | gzip > ./Packages.gz
+  elif [ `which dpkg-scanpackages | wc -l` -gt 0 ]; then
+    scanner="dpkg-scanpackages"
+    dpkg-scanpackages . /dev/null > ./Packages 2>/dev/null
+    gzip ./Packages
+  else
+    echo -e "--\n[!] Maaf, di komputer Anda belum terinstall apt-ftparchive atau dpkg-scanpackages.\nProses install tidak dapat dilanjutkan.\n"
+    cd "$ins_awaldir"
+    return $ins_status
+  fi
+  echo "deb [trusted=yes] file:$ins_ruangkerja ./" > source_sementara.list
+  mkdir part.d
+  mkdir lists
+  mkdir lists/partial
+  $assudo apt-get -o Dir::Etc::sourcelist="$ins_ruangkerja"/source_sementara.list -o Dir::Etc::sourceparts="$ins_ruangkerja"/part.d -o Dir::State::lists="$ins_ruangkerja"/lists -o Acquire::AllowInsecureRepositories=1 update 2> "$ins_ruangkerja"/log1.txt
+  if [ $? -ne 0 ]; then
+    cat "$ins_ruangkerja"/log1.txt
+    echo -e "\n[!] Tidak dapat membaca sources.list. Proses install dibatalkan.\n"
+    cd "$ins_awaldir"
+    return $ins_status
+  fi
+  $assudo apt-get -o Dir::Etc::sourcelist="$ins_ruangkerja"/source_sementara.list -o Dir::Etc::sourceparts="$ins_ruangkerja"/part.d -o Dir::State::lists="$ins_ruangkerja"/lists install --allow-unauthenticated -y `cat keterangan_alldeb.txt | grep \"*\" | cut -d\" -f2 | sed -n 1p` 2> "$ins_ruangkerja"/log2.txt
+  if [ $? -ne 0 ]; then
+    cat "$ins_ruangkerja"/log2.txt
+    echo -e "\nMencoba mencari di APT archives ($apt_archives)"
+    echo -e "Sedang melakukan scanning. Scanner = $scanner\nMungkin agak memakan waktu. Harap tunggu ..."
+    mkdir "$ins_ruangkerja"/lokal_archives
+    cd "$apt_archives"
+    if [ `which apt-ftparchive | wc -l` -gt 0 ]; then
+      apt-ftparchive packages . 2>/dev/null | gzip > "$ins_ruangkerja"/lokal_archives/Packages.gz
+    else
+      dpkg-scanpackages . /dev/null > "$ins_ruangkerja"/lokal_archives/Packages 2>/dev/null
+      gzip "$ins_ruangkerja"/lokal_archives/Packages
+    fi
+    $assudo mv "$ins_ruangkerja"/lokal_archives/Packages.gz "$apt_archives"/Packages.gz
+    cd "$ins_ruangkerja"
+    echo "deb [trusted=yes] file:$apt_archives ./" > source_sementara.list
+    echo "deb [trusted=yes] file:$ins_ruangkerja ./" >> source_sementara.list
+    $assudo apt-get -o Dir::Etc::sourcelist="$ins_ruangkerja"/source_sementara.list -o Dir::Etc::sourceparts="$ins_ruangkerja"/part.d -o Dir::State::lists="$ins_ruangkerja"/lists -o Acquire::AllowInsecureRepositories=1 update 2> "$ins_ruangkerja"/log3.txt
+    if [ $? -ne 0 ]; then
+      cat "$ins_ruangkerja"/log3.txt
+      echo -e "\n[!] Tidak dapat membaca sources.list. Proses install dibatalkan.\n"
+      $assudo rm -f "$apt_archives"/Packages.gz
+      cd "$ins_awaldir"
+      return $ins_status
+    fi
+    $assudo rm -f "$apt_archives"/Packages.gz
+    $assudo apt-get -o Dir::Etc::sourcelist="$ins_ruangkerja"/source_sementara.list -o Dir::Etc::sourceparts="$ins_ruangkerja"/part.d -o Dir::State::lists="$ins_ruangkerja"/lists install --allow-unauthenticated -y `cat keterangan_alldeb.txt | grep \"*\" | cut -d\" -f2 | sed -n 1p` 2> "$ins_ruangkerja"/log4.txt
+    #--selesai
+    if [ $? -ne 0 ]; then
+      echo -e "\n[!] Maaf, File alldeb ini tidak memenuhi kebutuhan dependensi komputer Anda.\nMungkin karena berbeda distro/arsitektur, atau karena sebagian paket di komputer Anda telah ter-update sejak file alldeb ini dibuat.\nSilakan buat ulang file alldeb up-to-date sesuai distro Anda di www.alldeb.net.\nInstallasi dibatalkan.\n"
+      $assudo apt-get --no-download update
+      ls -1 "$ins_ruangkerja" | grep "\.deb" > filter.txt
+      $assudo apt-get -y --print-uris install `cat keterangan_alldeb.txt | grep \"*\" | cut -d\" -f2 | sed -n 1p` | grep "\.deb" | grep -v --file=filter.txt > file_tak_ada.txt
+      if [ `cat "$ins_ruangkerja"/file_tak_ada.txt | wc -l` -gt 0 ]; then
+        echo -e "\nDaftar file yang tidak tersedia :\n--"
+        cat file_tak_ada.txt
+        echo -e "--\n"
+      else
+        echo -e "\nPesan error dari apt-get :\n"
+        cat "$ins_ruangkerja"/log4.txt
+        echo -e "\n"
+      fi
+      cd "$ins_awaldir"
+      return $ins_status
+    else
+      $assudo apt-get --no-download update
+    fi
+  else
+    $assudo apt-get --no-download update
+  fi
+  $assudo apt-get check
+  ins_status=$?
+  if [ $ins_status -eq 0 ]; then
+    if [ $(which update-menus | wc -l) -gt 0 ]; then
+      $assudo update-menus
+    fi
+    echo -e "Selesai.\n"
+  fi
+  cd "$ins_awaldir"
+  return "$ins_status"
+}
+
+
+function eksekusi {
+  run_targetfile="$1"
+  run_aksi=$2
+  run_ekstrakdir="$3"
+  if [ -z "$run_targetfile" ]; then
+    echo "tak ada file alldeb untuk diolah"
+    keluar 1
+  fi
+  if [ -z "$run_ekstrakdir" ]; then
+    run_ekstrakdir="$apt_archives"
+  fi
+  pengacak=$RANDOM
+  while [ -e /tmp/alldeb-manager-cli_$pengacak ]; do
+    pengacak=$RANDOM
+  done
+  run_ruangkerja=/tmp/alldeb-manager-cli_$pengacak
+  mkdir "$run_ruangkerja"
+  if [ ! -w "$run_ruangkerja" ]; then
+    echo "[!] Error : Tidak dapat menulis di directory /tmp"
+    keluar 1
+  else
+    echo -e "\n>> Mengolah file alldeb : `basename "$run_targetfile"`"
+    if [ ! -e "$run_targetfile" ]; then
+      echo -e "[!] File : $run_targetfile\n--> tidak ditemukan.\n"
+    else
+      if [ ! -r "$run_targetfile" ]; then
+        echo -e "[!] File : $run_targetfile\n--> tidak dapat dibaca.\n"
+      else
+        if [ ! `tar -tzf "$run_targetfile" 2> /dev/null | grep -sv "\.deb$"|wc -l` -eq 1 ]; then
+          echo -e "[!] File : $run_targetfile\n--> tidak dikenali sebagai file alldeb.\n"
+        elif [ ! `tar -tzf "$run_targetfile" 2> /dev/null | grep -sv "\.deb$"` == keterangan_alldeb.txt ]; then
+          echo -e "[!] File : $run_targetfile\n--> tidak dikenali sebagai file alldeb.\n"
+        else
+          tar -xzf "$run_targetfile" -C "$run_ruangkerja"
+          if [ ! -f "$run_ruangkerja"/keterangan_alldeb.txt ]; then
+            echo -e "[!] Terjadi kesalahan pada proses ekstraksi. Proses dibatalkan.\n"
+          else
+            if [ $run_aksi -eq 0 ]; then
+
+              echo -e "\nKeterangan di dalam file alldeb\n-------------------------------"
+              cat "$run_ruangkerja"/keterangan_alldeb.txt
+              echo -e "-------------------------------"
+              echo -e "ukuran : `du -h "$run_targetfile" | cut -f 1`B"
+              echo -e "md5sum : `md5sum "$run_targetfile" | cut -f1 "-d "`\n"
+              echo -e "\nApa yang ingin Anda lakukan?"
+              echo -e "  1=Install\n  2=Ekstrak (ke directory ekstrak : $run_ekstrakdir)\n  3=Install & Ekstrak\n  4=Batal\n\nPilih : \c"
+              read -r run_aksi
+            fi
+            if [ $run_aksi -eq 1 ]; then   #install
+              echo -e "\nPerintah : Install\n"
+              ins "$(pwd)" "$run_ruangkerja"
+              run_status=$?
+            elif [ $run_aksi -eq 2 ]; then   #ekstrak
+              echo -e "\nPerintah : Ekstrak\n"
+              ekstrak "$run_ruangkerja" "$run_ekstrakdir"
+              run_status=$?
+            elif [ $run_aksi -eq 3 ]; then   #install&ekstrak
+              echo -e "\nPerintah : Install+Ekstrak\n"
+              ins "$(pwd)" "$run_ruangkerja"
+              run_status_ins=$?
+              ekstrak "$run_ruangkerja" "$run_ekstrakdir"
+              run_status_ekstrak=$?
+              run_status=$((run_status_ins+run_status_ekstrak))
+            elif [ $run_aksi -eq 4 ]; then   #batal
+              echo -e "Pemrosesan dibatalkan.\n"
+               run_status=0
+            else
+              echo -e "Aksi yang Anda pilih tidak tersedia : $run_aksi\nPilihan tidak dikenali. Pemrosesan dibatalkan.\n"
+            fi
+          fi
+        fi
+      fi
+    fi
+  fi
+  rm -rf /tmp/alldeb-manager-cli_$pengacak
+  return $run_status
+}
+
+
+
+##################
+# --utama--
+##################
+berhasil_all=1
+
+mode=0  #terminal
+if [ $# -gt 0 ]; then
+  if [ "$1" == "--backend" ]; then
+    mode=1  #fltk
+    dir_order="/tmp/AM_order-alldeb"
+  fi
+fi
+
+if [ $(which sudo | wc -l) -gt 0 ]; then
+  #ada sudo
+  assudo="sudo"
+else
+  #tak ada sudo
+  if [ $EUID -eq 0 -o $(id -u) -eq 0 -o $(whoami) == "root" ]; then
+    #tak apa, sudah root
+    assudo=""
+  else
+    #tak ada sudo dan bukan root. minta jalankan ulang sebagai root
+    echo -e "\n-- [!] Maaf --\nAnda bukan root, dan di komputer Anda tidak tersedia \"sudo\".\nSilakan install sudo, atau jalankan ulang sebagai root.\n\n"
+    rm -rf "/tmp/AM_order-alldeb" #dir_order
+    keluar 1
+  fi
+fi
+
+ ##fltk
+if [ $mode -eq 1 ]; then
+  if [ -r "$dir_order"/targetfile -a -r "$dir_order"/ekstrakdir -a -r "$dir_order"/aksi ]; then
+    targetfile="`cat "$dir_order"/targetfile`"
+    ekstrakdir="`cat "$dir_order"/ekstrakdir`"
+    aksi="`cat "$dir_order"/aksi`"
+    rm -rf "$dir_order"
+  else
+    echo -e "\n[!] File-file perintah di dalam directory $dir_order tidak lengkap atau tidak dapat dibaca\n"
+    keluar 1
+  fi
+  eksekusi "$targetfile" "$aksi" "$ekstrakdir"
+  berhasil_all=$?
+# echo "Menyimpan setting saat ini.."
+  $assudo rm -rf /etc/lpm/lpm-settings
+  $assudo mkdir -p /etc/lpm/lpm-settings
+  $assudo chmod 777 /etc/lpm/lpm-settings
+#  echo "`dirname "$targetfile"`" > /etc/lpm/lpm-settings/dir_lastcall
+  echo "$targetfile" > /etc/lpm/lpm-settings/dir_lastcall
+  echo "$ekstrakdir" > /etc/lpm/lpm-settings/ekstrakdir
+  echo "$aksi" > /etc/lpm/lpm-settings/last_aksi
+# echo -e "Selesai.\n"
+
+##terminal-multifile
+else
+  #ekstrakdir="$apt_archives" --> dipindah ke atas (konfigurasi)
+  aksi=0
+  jmlfiles=0
+  for i in "$@"
+  do
+  case "$i" in
+      -t=*|--ekstrak-ke=*|--extract-to=*)
+      ekstrakdir="${i#*=}"
+      ;;
+      -a=*|--aksi=*|--action=*)
+      aksi=${i#*=}
+      ;;
+      *)
+      jmlfiles=$((jmlfiles+1))
+      ;;
+  esac
+  done
+
+  if [ $jmlfiles -gt 0 ]; then
+    berhasil_all=0
+    for targetfile in "$@"
+    do
+    case "$targetfile" in
+        -*)
+        shift
+        ;;
+        *)
+        eksekusi "$targetfile" $aksi "$ekstrakdir"
+        berhasil_each=$?
+        berhasil_all=$((berhasil_all+berhasil_each))
+        ;;
+    esac
+    done
+  else
+    echo -e "\nSilahkan tentukan file alldeb yang akan diproses."
+    echo -e "\nLetak file alldeb yang akan diproses (contoh; /home/user/file1.alldeb) :"
+    read -er allfiles
+    if [ -z "$allfiles" ]; then
+      echo -e "[!] Anda tidak memasukkan nama file.\n--> Silakan tentukan nama/letak file alldeb yang ingin Anda proses"
+    elif [ -z "$(eval ls -1d "$allfiles")" ]; then
+      echo -e "\n[!] File tersebut tidak ditemukan.\n--> Silakan teliti kembali penulisan nama/letak file alldeb Anda"
+    else
+      OLDIFS=$IFS
+      IFS=$(echo -en "\n\b")
+      for targetfile in $(eval ls -1d "$allfiles"); do
+        eksekusi "$targetfile" $aksi "$ekstrakdir"
+      done
+      IFS=$OLDIFS
+    fi
+  fi
+  echo ""
+
+fi  
+
+##
+
+keluar $berhasil_all

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.effect.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import com.jfoenix.controls.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="423.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="laos.homeController">
+
+    <children>
+      <VBox fx:id="vutama" alignment="TOP_CENTER" layoutY="-2.0" minHeight="-Infinity" minWidth="-Infinity" prefHeight="457.0" prefWidth="800.0">
+         <children>
+            <Pane fx:id="pane" minHeight="-Infinity" minWidth="-Infinity" prefHeight="53.0" prefWidth="800.0" style="-fx-background-color: #00bcd4;" styleClass="width : 100%;">
+               <children>
+                  <JFXButton fx:id="buttonInstaller" layoutX="694.0" layoutY="11.0" onAction="#newWindow" ripplerFill="#e8e8e8" style="-fx-border-color: #ffffff;" styleClass="float: right" text="Installer" textFill="WHITE">
+                     <font>
+                        <Font name="Montserrat Bold" size="13.0" />
+                     </font>
+                  </JFXButton>
+                  <Label layoutX="22.0" layoutY="16.0" text="LaosManager" textFill="WHITE" textOverrun="WORD_ELLIPSIS">
+                     <font>
+                        <Font name="Montserrat Medium" size="20.0" />
+                     </font>
+                  </Label>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="7.0" right="7.0" top="5.0" />
+               </padding>
+            </Pane>
+            <Label fx:id="textCari" prefHeight="25.0" prefWidth="151.0" text="CARI APLIKASI" textFill="#80c9eb">
+               <font>
+                  <Font name="Lato Black" size="20.0" />
+               </font>
+               <VBox.margin>
+                  <Insets top="70.0" />
+               </VBox.margin>
+            </Label>
+            <HBox fx:id="horizontal" alignment="CENTER" prefHeight="117.0" prefWidth="800.0">
+               <children>
+                  <JFXTextField fx:id="fieldSearch" focusColor="#00bcd4" onAction="#ActionCari" prefHeight="25.0" prefWidth="497.0" promptText="Cari disini ....." style="-fx-background-color: transparent;" unFocusColor="#dadada">
+                     <font>
+                        <Font name="Montserrat Regular" size="13.0" />
+                     </font>
+                  </JFXTextField>
+                  <JFXButton fx:id="btnSearch" buttonType="RAISED" onAction="#ActionCari" style="-fx-background-color: #00bcd4;" text="Cari" textAlignment="CENTER" textFill="WHITE">
+                     <font>
+                        <Font name="Montserrat Regular" size="14.0" />
+                     </font>
+                     <padding>
+                        <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+                     </padding>
+                  </JFXButton>
+               </children>
+            </HBox>
+            <Label fx:id="textHasil" text="Hasil Pencarian Anda : ">
+               <VBox.margin>
+                  <Insets bottom="10.0" />
+               </VBox.margin></Label>
+            <VBox fx:id="vbox" maxWidth="-Infinity" prefHeight="222.0" prefWidth="600.0">
+               <children>
+                  <ScrollPane fx:id="scroll" hbarPolicy="NEVER" prefHeight="401.0" prefWidth="600.0">
+                     <content>
+                        <VBox fx:id="boxHasil" prefHeight="200.0" spacing="10.0">
+                           <children>
+<!--                              <Pane fx:id="badgeHasil" prefHeight="53.0" prefWidth="597.0" style="-fx-background-color: #039BE5;">
+                                 <children>
+                                    <JFXButton fx:id="btnDownload" buttonType="RAISED" layoutX="473.0" layoutY="14.0" onAction="#btnDownloadAction" style="-fx-background-color: #8BC34A;" text="Download" textFill="WHITE" />
+                                    <Label fx:id="namaPaket1" layoutX="14.0" layoutY="16.0" text="Inkscape" textFill="WHITE">
+                                       <font>
+                                          <Font name="Lato Black" size="17.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </Pane>-->
+                           </children>
+                        </VBox>
+                     </content>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                  </ScrollPane>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

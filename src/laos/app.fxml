@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.text.*?>
+<?import com.jfoenix.controls.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.effect.*?>
+<?import javafx.geometry.*?>
+
+<AnchorPane id="AnchorPane" fx:id="AnchorPane" maxWidth="1.7976931348623157E308" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="laos.AppController">
+    <children>
+      <Pane fx:id="pane" layoutX="0.0" prefHeight="53.0" prefWidth="800.0" style="-fx-background-color: #00bcd4; -fx-min-width: 100%;" styleClass="width : 100%;" AnchorPane.bottomAnchor="547.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <JFXButton fx:id="buttonInstaller" layoutX="694.0" layoutY="11.0" ripplerFill="#e8e8e8" style="-fx-border-color: #ffffff;" styleClass="float: right" text="Installer" textFill="WHITE">
+               <font>
+                  <Font name="Montserrat Bold" size="13.0" />
+               </font>
+            </JFXButton>
+            <Label layoutX="22.0" layoutY="16.0" text="LaosManager" textFill="WHITE" textOverrun="WORD_ELLIPSIS">
+               <font>
+                  <Font name="Montserrat Medium" size="20.0" />
+               </font>
+            </Label>
+         </children>
+         <padding>
+            <Insets bottom="5.0" left="7.0" right="7.0" top="5.0" />
+         </padding>
+      </Pane>
+      <ImageView fitHeight="118.0" fitWidth="94.0" layoutX="60.0" layoutY="82.0" pickOnBounds="true" preserveRatio="true" styleClass="height: 100px">
+         <image>
+            <Image url="@../../../../../../opt/JavaFXSceneBuilder2.0/app/fxml-16.png" />
+         </image>
+      </ImageView>
+      <Label fx:id="judulApp" layoutX="173.0" layoutY="82.0" text="Inkscape">
+         <font>
+            <Font name="Lato Black" size="25.0" />
+         </font>
+      </Label>
+      <JFXButton buttonType="RAISED" layoutX="675.0" layoutY="82.0" prefHeight="32.0" prefWidth="89.0" style="-fx-background-color: #43A047;" text="Install" textFill="WHITE">
+         <font>
+            <Font name="Lato Medium" size="13.0" />
+         </font>
+      </JFXButton>
+      <Label layoutX="173.0" layoutY="114.0" text="Size : ">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Label>
+      <Label alignment="TOP_LEFT" layoutX="173.0" layoutY="148.0" prefHeight="88.0" prefWidth="482.0" text="Ini adalah aplikasi Inkscape" />
+      <Label layoutX="218.0" layoutY="115.0" text="50kb" />
+   </children>
+</AnchorPane>
